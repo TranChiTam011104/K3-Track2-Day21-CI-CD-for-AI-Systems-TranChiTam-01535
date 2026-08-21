@@ -57,12 +57,13 @@ jobs:
           credentials_json: ${{ secrets.CLOUD_CREDENTIALS }}
 
       - name: Activate service account
-        run: gcloud auth activate-service-account --key-file=${{ github.workspace }}/gha-creds.json
+        run: gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
       - name: Pull data from GCS
         run: |
-          gsutil cp gs://${{ secrets.CLOUD_BUCKET }}/data/train_phase1.csv data/
-          gsutil cp gs://${{ secrets.CLOUD_BUCKET }}/data/eval.csv data/
+          mkdir -p data
+          gsutil cp gs://${{ secrets.CLOUD_BUCKET }}/dvc/** data/
+          ls -la data/
 
       - name: Train model
         run: python src/train.py
