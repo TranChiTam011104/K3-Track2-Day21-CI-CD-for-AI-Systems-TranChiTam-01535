@@ -30,6 +30,8 @@ def train(
 
     # TODO 1: Doc du lieu huan luyen va danh gia
     df_train = pd.read_csv(data_path)
+    df_train2 = pd.read_csv("data/train_phase2.csv")
+    df_train = pd.concat([df_train, df_train2], ignore_index=True)
     df_eval  = pd.read_csv(eval_path)
 
     # TODO 2: Tach dac trung (X) va nhan (y)
