@@ -56,6 +56,9 @@ jobs:
         with:
           credentials_json: ${{ secrets.CLOUD_CREDENTIALS }}
 
+      - name: Activate service account
+        run: gcloud auth activate-service-account --key-file=${{ github.workspace }}/gha-creds.json
+
       - name: Pull data from GCS
         run: |
           gsutil cp gs://${{ secrets.CLOUD_BUCKET }}/data/train_phase1.csv data/
