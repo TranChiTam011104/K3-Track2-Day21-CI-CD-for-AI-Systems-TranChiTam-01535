@@ -157,6 +157,8 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            printf '[Unit]\nDescription=MLOps Model Inference Server\nAfter=network.target\n\n[Service]\nUser=tranc\nWorkingDirectory=/home/tranc\nEnvironment="GCS_BUCKET=mlops-lab-tranchitam-01535-bucket"\nEnvironment="GOOGLE_APPLICATION_CREDENTIALS=/home/tranc/sa-key.json"\nExecStart=/usr/bin/python3 /home/tranc/src/serve.py\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n' | sudo tee /etc/systemd/system/mlops-serve.service > /dev/null
+            sudo systemctl daemon-reload
             sudo systemctl restart mlops-serve
             sleep 5
             curl -sf http://localhost:8000/health && echo "Health check passed." || exit 1

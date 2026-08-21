@@ -1,0 +1,15 @@
+[Unit]
+Description=MLOps Model Inference Server
+After=network.target
+
+[Service]
+User=tranc
+WorkingDirectory=/home/tranc
+Environment="GCS_BUCKET=mlops-lab-tranchitam-01535-bucket"
+Environment="GOOGLE_APPLICATION_CREDENTIALS=/home/tranc/sa-key.json"
+ExecStart=/usr/bin/python3 /home/tranc/src/serve.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
