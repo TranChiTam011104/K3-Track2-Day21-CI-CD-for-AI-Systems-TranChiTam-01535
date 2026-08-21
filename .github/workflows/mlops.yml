@@ -61,9 +61,40 @@ jobs:
 
       - name: Pull data from GCS
         run: |
-          mkdir -p data
-          gsutil -m cp -r gs://${{ secrets.CLOUD_BUCKET }}/dvc/files/md5/ data/
-          ls -la data/
+          python - <<'EOF'
+          import os
+          from google.cloud import storage
+          
+          bucket_name = "${{ secrets.CLOUD_BUCKET }}"
+          client = storage.Client()
+          bucket = client.bucket(bucket_name)
+          
+          os.makedirs("data", exist_ok=True)
+          
+          # Map md5 -> filename from .dvc files
+          files = {
+              "c43afab731fd6431a94f888fdc687876": "train_phase1.csv",
+          }
+          
+          # Read eval md5 from dvc file
+          with open("data/eval.csv.dvc", "r") as f:
+              for line in f:
+                  if "md5:" in line:
+                      md5 = line.split("md5:")[1].strip()
+                      files[md5] = "eval.csv"
+                      break
+          
+          # Download each file
+          for prefix, filename in files.items():
+              blobs = list(bucket.list_blobs(prefix=f"dvc/files/md5/"))
+              for blob in blobs:
+                  if blob.name.endswith("/" + prefix) or prefix in blob.name:
+                      blob.download_to_filename(f"data/{filename}")
+                      print(f"Downloaded {filename}")
+                      break
+          
+          print("Done!")
+          EOF
 
       - name: Train model
         run: python src/train.py
