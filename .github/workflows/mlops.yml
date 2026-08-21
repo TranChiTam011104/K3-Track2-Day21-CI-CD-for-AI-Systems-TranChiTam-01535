@@ -73,7 +73,7 @@ jobs:
           os.makedirs("data", exist_ok=True)
           
           # Download train file directly
-          blob = bucket.blob("dvc/files/md5/1d/c43afab731fd6431a94f888fdc687876")
+          blob = bucket.blob("dvc/files/md5/c4/c43afab731fd6431a94f888fdc687876")
           blob.download_to_filename("data/train_phase1.csv")
           print(f"Downloaded train_phase1.csv")
           
