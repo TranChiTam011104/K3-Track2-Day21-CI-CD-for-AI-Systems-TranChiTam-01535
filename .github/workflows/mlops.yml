@@ -13,9 +13,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # JOB 1 - UNIT TEST
-  # Chay unit tests tren du lieu ao (khong can ket noi cloud storage).
-  # Neu co bat ky test nao that bai, pipeline dung lai o day va khong tien hanh
-  # huan luyen hay trien khai.
   # ---------------------------------------------------------------------------
   test:
     name: Unit Test
@@ -36,8 +33,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # JOB 2 - TRAIN
-  # Xac thuc cloud storage, pull du lieu bang DVC, huan luyen mo hinh, upload artifact.
-  # Chi chay khi Job 1 (Unit Test) hoan thanh thanh cong.
   # ---------------------------------------------------------------------------
   train:
     name: Train
@@ -56,30 +51,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Authenticate to Cloud Storage
-        env:
-          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
-        run: |
-          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
-          # Configure DVC to use environment variable instead of credentialpath
-          dvc remote modify myremote credentialpath /tmp/sa-key.json
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.CLOUD_CREDENTIALS }}
 
       - name: Pull data with DVC
-        env:
-          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
-        run: |
-          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
-          dvc pull data/train_phase1.csv data/eval.csv
+        run: dvc pull data/train_phase1.csv data/eval.csv
 
       - name: Train model
-        env:
-          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
-        run: |
-          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
-          python src/train.py
+        run: python src/train.py
 
       - name: Read metrics
         id: read_metrics
@@ -89,11 +70,8 @@ jobs:
 
       - name: Upload model to Cloud Storage
         env:
-          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
           CLOUD_BUCKET: ${{ secrets.CLOUD_BUCKET }}
         run: |
-          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
           python - <<'EOF'
           import os
           from google.cloud import storage
@@ -115,9 +93,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # JOB 3 - EVAL
-  # Kiem tra nguong chat luong (accuracy >= 0.70).
-  # Pipeline dung lai o day neu mo hinh chua dat yeu cau.
-  # Chi chay khi Job 2 (Train) hoan thanh thanh cong.
   # ---------------------------------------------------------------------------
   eval:
     name: Eval
@@ -137,8 +112,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # JOB 4 - DEPLOY
-  # Trien khai len VM qua SSH.
-  # Chi chay khi Job 3 (Eval) hoan thanh thanh cong.
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy
