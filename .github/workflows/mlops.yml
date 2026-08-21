@@ -62,7 +62,7 @@ jobs:
       - name: Pull data from GCS
         run: |
           mkdir -p data
-          gsutil cp gs://${{ secrets.CLOUD_BUCKET }}/data/* data/
+          gsutil -m cp -r gs://${{ secrets.CLOUD_BUCKET }}/dvc/files/md5/ data/
           ls -la data/
 
       - name: Train model
