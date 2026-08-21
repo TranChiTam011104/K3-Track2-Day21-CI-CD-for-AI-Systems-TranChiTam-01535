@@ -61,6 +61,7 @@ jobs:
 
       - name: Pull data from GCS
         run: |
+          ls -la data/
           python - <<'EOF'
           import os
           from google.cloud import storage
@@ -71,30 +72,22 @@ jobs:
           
           os.makedirs("data", exist_ok=True)
           
-          # Map md5 -> filename from .dvc files
-          files = {
-              "c43afab731fd6431a94f888fdc687876": "train_phase1.csv",
-          }
+          # Download train file directly
+          blob = bucket.blob("dvc/files/md5/1d/c43afab731fd6431a94f888fdc687876")
+          blob.download_to_filename("data/train_phase1.csv")
+          print(f"Downloaded train_phase1.csv")
           
-          # Read eval md5 from dvc file
-          with open("data/eval.csv.dvc", "r") as f:
-              for line in f:
-                  if "md5:" in line:
-                      md5 = line.split("md5:")[1].strip()
-                      files[md5] = "eval.csv"
-                      break
-          
-          # Download each file
-          for prefix, filename in files.items():
-              blobs = list(bucket.list_blobs(prefix=f"dvc/files/md5/"))
-              for blob in blobs:
-                  if blob.name.endswith("/" + prefix) or prefix in blob.name:
-                      blob.download_to_filename(f"data/{filename}")
-                      print(f"Downloaded {filename}")
-                      break
+          # Download eval file - find the hash
+          blobs = list(bucket.list_blobs(prefix="dvc/files/md5/"))
+          for blob in blobs:
+              if blob.name.startswith("dvc/files/md5/") and len(blob.name.split("/")[-1]) == 32:
+                  blob.download_to_filename("data/eval.csv")
+                  print(f"Downloaded eval.csv from {blob.name}")
+                  break
           
           print("Done!")
           EOF
+          ls -la data/
 
       - name: Train model
         run: python src/train.py
