@@ -76,6 +76,11 @@ jobs:
           blob.download_to_filename("data/train_phase1.csv")
           print("Downloaded train_phase1.csv")
           
+          # train_phase2.csv: fd073d6651b2ff224c0da1eb1c049a32 -> fd/
+          blob = bucket.blob("dvc/files/md5/fd/073d6651b2ff224c0da1eb1c049a32")
+          blob.download_to_filename("data/train_phase2.csv")
+          print("Downloaded train_phase2.csv")
+          
           # eval.csv: b11de6b7adaa93a44278fd7e168b2288 -> b1/
           blob = bucket.blob("dvc/files/md5/b1/1de6b7adaa93a44278fd7e168b2288")
           blob.download_to_filename("data/eval.csv")
