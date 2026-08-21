@@ -57,15 +57,29 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Authenticate to Cloud Storage
+        env:
+          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
         run: |
-          echo '${{ secrets.CLOUD_CREDENTIALS }}' > /tmp/sa-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json" >> $GITHUB_ENV
+          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
+          # Configure DVC to use environment variable instead of credentialpath
+          dvc remote modify myremote credentialpath /tmp/sa-key.json
 
       - name: Pull data with DVC
-        run: dvc pull data/train_phase1.csv data/eval.csv
+        env:
+          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
+        run: |
+          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
+          dvc pull data/train_phase1.csv data/eval.csv
 
       - name: Train model
-        run: python src/train.py
+        env:
+          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
+        run: |
+          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
+          python src/train.py
 
       - name: Read metrics
         id: read_metrics
@@ -74,7 +88,12 @@ jobs:
           echo "accuracy=$ACC" >> $GITHUB_OUTPUT
 
       - name: Upload model to Cloud Storage
+        env:
+          CLOUD_CREDENTIALS: ${{ secrets.CLOUD_CREDENTIALS }}
+          CLOUD_BUCKET: ${{ secrets.CLOUD_BUCKET }}
         run: |
+          echo "$CLOUD_CREDENTIALS" > /tmp/sa-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa-key.json
           python - <<'EOF'
           import os
           from google.cloud import storage
