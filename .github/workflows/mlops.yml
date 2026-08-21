@@ -60,7 +60,7 @@ jobs:
         run: |
           echo "$GOOGLE_APPLICATION_CREDENTIALS" > /tmp/sa-key.json
           gcloud auth activate-service-account --key-file=/tmp/sa-key.json
-          dvc remote modify myremote credentialpath /tmp/sa-key.json
+          dvc remote modify myremote --local credentialpath /tmp/sa-key.json
 
       - name: Pull data with DVC
         run: dvc pull data/train_phase1.csv data/eval.csv
