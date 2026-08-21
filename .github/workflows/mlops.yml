@@ -61,10 +61,9 @@ jobs:
 
       - name: Pull data from GCS
         run: |
-          ls -la data/
           python - <<'EOF'
-          import os
           from google.cloud import storage
+          import os
           
           bucket_name = "${{ secrets.CLOUD_BUCKET }}"
           client = storage.Client()
@@ -72,18 +71,15 @@ jobs:
           
           os.makedirs("data", exist_ok=True)
           
-          # Download train file directly
+          # train_phase1.csv: c43afab731fd6431a94f888fdc687876 -> c4/
           blob = bucket.blob("dvc/files/md5/c4/3afab731fd6431a94f888fdc687876")
           blob.download_to_filename("data/train_phase1.csv")
-          print(f"Downloaded train_phase1.csv")
+          print("Downloaded train_phase1.csv")
           
-          # Download eval file - find the hash
-          blobs = list(bucket.list_blobs(prefix="dvc/files/md5/"))
-          for blob in blobs:
-              if blob.name.startswith("dvc/files/md5/") and len(blob.name.split("/")[-1]) == 32:
-                  blob.download_to_filename("data/eval.csv")
-                  print(f"Downloaded eval.csv from {blob.name}")
-                  break
+          # eval.csv: b11de6b7adaa93a44278fd7e168b2288 -> b1/
+          blob = bucket.blob("dvc/files/md5/b1/1de6b7adaa93a44278fd7e168b2288")
+          blob.download_to_filename("data/eval.csv")
+          print("Downloaded eval.csv")
           
           print("Done!")
           EOF
